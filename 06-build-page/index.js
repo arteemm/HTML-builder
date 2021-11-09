@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const process = require('process');
 const stream = fs.createWriteStream(
   './06-build-page/project-dist/index.html',
   'utf8'
@@ -11,6 +12,7 @@ const styles = fs.createWriteStream(
 let str = '';
 let array;
 
+
 stream.on('error', (err) => console.log(`Err: ${err}`));
 styles.on('error', (err) => console.log(`Err: ${err}`));
 
@@ -20,47 +22,37 @@ fs.mkdir('./06-build-page/project-dist',{ recursive: true }, (err) => {
 
 fs.readFile('./06-build-page/template.html', 'utf8',(err, data) => {
   if (err) throw err;
- 
   str = data;
   array = str.split('\n');
+  let fileName;
+
+fs.readdir('./06-build-page/components', {withFileTypes: true}, (err, files) => {
+  files.forEach((file) => {
+    if(path.extname(file.name) === '.html') {
+      
+      fs.readFile(`./06-build-page/components/${file.name}`, 'utf8',(err, data) => {
+        fileName = (file.name).split('.').slice(0, -1).join('.');
+        array = array.map((item) => {
+          if (item.includes(`{{${fileName}}}`)) {
+            if (err) throw err;
+            return item = data;
+          }
+          return item;
+        });
+      });
+      
+    }
+  });
+  
+});
 
 });
 
-fs.readFile('./06-build-page/components/header.html', 'utf8',(err, header) => {
-
-  array = array.map((item) => {
-    if (item.includes('{{header}}')) {
-      if (err) throw err;
-      return item = header;
-    }
-    return item;
-  });
-
-});
-
-fs.readFile('./06-build-page/components/footer.html', 'utf8',(err, footer) => {
-
-  array = array.map((item) => {
-    if (item.includes('{{footer}}')) {
-      if (err) throw err;
-      return item = footer;
-    }
-    return item;
-  });
-
-});
-
-fs.readFile('./06-build-page/components/articles.html', 'utf8',(err, articles) => {
-
-  array = array.map((item) => {
-    if (item.includes('{{articles}}')) {
-      if (err) throw err;
-      return item = articles;
-    }
-    return item;
-  });
+process.on('exit', () => {
   stream.write(array.join(''));
-});
+})
+ 
+
 
 fs.readdir('./06-build-page/styles', {withFileTypes: true}, (err, files) => {
   if (err) throw err;
